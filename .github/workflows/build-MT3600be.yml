@@ -1,4 +1,4 @@
-name: Build GL-MT3600BE (Final Local DTS)
+name: Build GL-MT3600BE (Safe Syntax)
 
 on:
   workflow_dispatch:
@@ -53,25 +53,25 @@ jobs:
           if ! grep -q "$MARKER" "$MK_FILE"; then
             echo "Injecting device definition into $MK_FILE ..."
             
-            # 使用 cat 和 heredoc 追加内容
-            cat >> "$MK_FILE" << 'ENDOFDEVICE'
-
-# --- AUTO-INJECTED MT3600BE ---
-define Device/glinet_gl-mt3600be
-  DEVICE_VENDOR := GL.iNet
-  DEVICE_MODEL := GL-MT3600BE
-  DEVICE_DTS := mt7987a-glinet-gl-mt3600be
-  DEVICE_DTS_DIR := ../dts
-  DEVICE_PACKAGES := kmod-mt7996-firmware uboot-envtools
-  BLOCKSIZE := 128k
-  PAGESIZE := 2048
-  KERNEL_IN_UBI := 1
-  UBINIZE_OPTS := -E 5
-  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
-endef
-TARGET_DEVICES += glinet_gl-mt3600be
-# --- END AUTO-INJECTED MT3600BE ---
-ENDOFDEVICE
+            # 使用 printf 逐行写入，避免 YAML heredoc 解析问题
+            {
+              printf '\n%s\n' "# --- AUTO-INJECTED MT3600BE ---"
+              printf '%s\n' "define Device/glinet_gl-mt3600be"
+              printf '%s\n' "  DEVICE_VENDOR := GL.iNet"
+              printf '%s\n' "  DEVICE_MODEL := GL-MT3600BE"
+              printf '%s\n' "  DEVICE_DTS := mt7987a-glinet-gl-mt3600be"
+              printf '%s\n' "  DEVICE_DTS_DIR := ../dts"
+              printf '%s\n' "  DEVICE_PACKAGES := kmod-mt7996-firmware uboot-envtools"
+              printf '%s\n' "  BLOCKSIZE := 128k"
+              printf '%s\n' "  PAGESIZE := 2048"
+              printf '%s\n' "  KERNEL_IN_UBI := 1"
+              printf '%s\n' "  UBINIZE_OPTS := -E 5"
+              printf '%s\n' "  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata"
+              printf '%s\n' "endef"
+              printf '%s\n' "TARGET_DEVICES += glinet_gl-mt3600be"
+              printf '%s\n' "# --- END AUTO-INJECTED MT3600BE ---"
+            } >> "$MK_FILE"
+            
             echo "✅ Definition injected."
           else
             echo "⚠️ Definition already exists, skipping."
@@ -126,7 +126,7 @@ ENDOFDEVICE
       - name: 📤 上传固件
         uses: actions/upload-artifact@v4
         with:
-          name: GL-MT3600BE-Final-Build-${{ github.run_number }}
+          name: GL-MT3600BE-Safe-Build-${{ github.run_number }}
           path: |
             fanchmwrt/bin/targets/mediatek/filogic/*sysupgrade*
             fanchmwrt/bin/targets/mediatek/filogic/*.manifest
