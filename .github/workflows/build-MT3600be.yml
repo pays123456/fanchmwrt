@@ -34,7 +34,7 @@ jobs:
           cd fanchmwrt
           echo "FanchmWrt Branch: $(git branch --show-current)"
           
-          # 1. 验证 DTS 文件是否存在
+          # 验证 DTS 文件是否存在
           DTS_PATH="target/linux/mediatek/dts/mt7987a-glinet-gl-mt3600be.dts"
           if [ ! -f "$DTS_PATH" ]; then
             echo "❌ ERROR: DTS file not found at $DTS_PATH"
@@ -53,7 +53,8 @@ jobs:
           if ! grep -q "$MARKER" "$MK_FILE"; then
             echo "Injecting device definition into $MK_FILE ..."
             
-            cat >> "$MK_FILE" <<'EOF'
+            # 使用 cat 和 heredoc 追加内容
+            cat >> "$MK_FILE" << 'ENDOFDEVICE'
 
 # --- AUTO-INJECTED MT3600BE ---
 define Device/glinet_gl-mt3600be
@@ -70,7 +71,7 @@ define Device/glinet_gl-mt3600be
 endef
 TARGET_DEVICES += glinet_gl-mt3600be
 # --- END AUTO-INJECTED MT3600BE ---
-EOF
+ENDOFDEVICE
             echo "✅ Definition injected."
           else
             echo "⚠️ Definition already exists, skipping."
@@ -88,7 +89,7 @@ EOF
           CONFIG_ITEM="CONFIG_TARGET_mediatek_filogic_DEVICE_glinet_gl-mt3600be"
           
           # 创建初始配置
-          cat > .config <<EOF
+          cat > .config << EOF
           CONFIG_HAVE_DOT_CONFIG=y
           CONFIG_TARGET_mediatek=y
           CONFIG_TARGET_mediatek_filogic=y
